@@ -1,0 +1,23 @@
+name: Build IPA
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen && xcodegen generate
+      - run: >
+          xcodebuild -project Compagnon.xcodeproj -scheme Compagnon -configuration Release
+          -sdk iphoneos -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/Compagnon.app Payload/
+          zip -r Compagnon.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Compagnon-IPA
+          path: Compagnon.ipa
