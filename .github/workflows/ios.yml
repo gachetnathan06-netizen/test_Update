@@ -5,15 +5,18 @@ on:
   workflow_dispatch:
 jobs:
   build:
-  runs-on: macos-15
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - run: brew install xcodegen && xcodegen generate
-      - run: >
-          xcodebuild -project Compagnon.xcodeproj -scheme Compagnon -configuration Release
-          -sdk iphoneos -derivedDataPath build
-          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
-      - run: |
+      - name: Generate project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Build
+        run: |
+          xcodebuild -project Compagnon.xcodeproj -scheme Compagnon -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - name: Package
+        run: |
           mkdir Payload
           cp -R build/Build/Products/Release-iphoneos/Compagnon.app Payload/
           zip -r Compagnon.ipa Payload
