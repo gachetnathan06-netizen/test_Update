@@ -2,35 +2,30 @@ import SwiftUI
 import UIKit
 
 @main
-final class AppDelegate: UIResponder, UIApplicationDelegate {
-    var window: UIWindow?
-    let app = AppState()
+struct CompagnonApp: App {
+    @StateObject private var app = AppState()
+    @Environment(\.scenePhase) private var phase
 
-    func application(_ application: UIApplication,
-                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    init() {
         let a = UITabBarAppearance()
         a.configureWithTransparentBackground()
         a.backgroundEffect = UIBlurEffect(style: .systemChromeMaterialDark)
         UITabBar.appearance().standardAppearance = a
         if #available(iOS 15.0, *) { UITabBar.appearance().scrollEdgeAppearance = a }
         UITableView.appearance().backgroundColor = .clear
-        UISwitch.appearance().onTintColor = UIColor(red: 1, green: 0.71, blue: 0.28, alpha: 1)
+    }
 
-        let host = UIHostingController(rootView: RootView().environmentObject(app).accentColor(Theme.amber))
-        host.overrideUserInterfaceStyle = .dark
-        let w = UIWindow(frame: UIScreen.main.bounds)
-        w.overrideUserInterfaceStyle = .dark
-        w.rootViewController = host
-        w.makeKeyAndVisible()
-        window = w
-
-        NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.app.background()
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .environmentObject(app)
+                .preferredColorScheme(.dark)
+                .accentColor(Theme.amber)
+                .onChange(of: phase) { p in
+                    if p == .background { app.background() }
+                    if p == .active { app.welcome() }
+                }
         }
-        NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.app.welcome()
-        }
-        return true
     }
 }
 
@@ -40,11 +35,11 @@ struct RootView: View {
     var body: some View {
         ZStack(alignment: .top) {
             TabView {
-                HomeView().tabItem { Image(systemName: "house.fill"); Text("Accueil") }
-                WardrobeView().tabItem { Image(systemName: "bag.fill"); Text("Garde-robe") }
-                FocusView().tabItem { Image(systemName: "timer"); Text("Focus") }
-                HoopView().tabItem { Image(systemName: "gamecontroller.fill"); Text("Panier") }
-                MoreView().tabItem { Image(systemName: "slider.horizontal.3"); Text("Plus") }
+                HomeView().tabItem { Label("Accueil", systemImage: "house.fill") }
+                WardrobeView().tabItem { Label("Garde-robe", systemImage: "bag.fill") }
+                ShopView(embedded: true).tabItem { Label("Boutique", systemImage: "cart.fill") }
+                ToolsHubView().tabItem { Label("Outils", systemImage: "square.grid.2x2.fill") }
+                MoreView().tabItem { Label("Plus", systemImage: "slider.horizontal.3") }
             }
             if let t = app.toast {
                 Text(t)

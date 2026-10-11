@@ -47,7 +47,7 @@ enum SeasonScene {
     /// Couleur du décor, assombrie la nuit.
     private static func tone(_ hex: UInt32, _ night: Double, _ amount: Double = 0.5, _ opacity: Double = 1) -> Color {
         let c = RGB.mix(RGB(hex), RGB(0x0B0A24), night * amount)
-        return Color(UIColor(red: CGFloat(c.r), green: CGFloat(c.g), blue: CGFloat(c.b), alpha: CGFloat(opacity)))
+        return Color(.sRGB, red: c.r, green: c.g, blue: c.b, opacity: opacity)
     }
 
     private static let bulbColors: [UInt32] = [0xFF4D5E, 0xFFD34E, 0x5BE37D, 0x5BB8FF]

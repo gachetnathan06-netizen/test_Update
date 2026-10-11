@@ -1,4 +1,4 @@
-# BOB 2.0 : version iPhone (SwiftUI), compatible iOS 13+
+# BOB 2.0 : version iPhone (SwiftUI), compatible iOS 14+
 
 Tout le Compagnon de bureau, sans l'errance sur les autres apps (BOB vit uniquement dans l'appli).
 
@@ -39,8 +39,7 @@ Réglages : Plus > Appareil > Sons + volume. Les sons se mélangent avec ta musi
 - Au départ, seul le pack Bob est débloqué.
 - L'icône est générée par `tools/make_icon.py` (Pillow) → `Sources/Assets.xcassets/AppIcon.appiconset/icon.png`.
 
-## Compatibilité iOS 13
-- Cible de déploiement : iOS 13.0 (`project.yml`).
-- Point d'entrée UIKit (`AppDelegate` + `UIHostingController`) à la place de `@main App` (iOS 14).
-- `Compat.swift` fournit les équivalents iOS 13 : `FlowGrid` (grille), `Label`, `BarProgress`, `ColorBridge` (Color → UIColor), `TimelineView`, `NavigationStack`.
-- Certains symboles SF récents peuvent ne pas s'afficher sur iOS 13 (l'icône reste vide, sans crash).
+## Nouveautés v6 : Outils (DLC utilitaires) & boutique
+- **Onglet Boutique** (plus visible) + bouton Boutique dans le dock, pastille pièces ambre, bandeau « Cadeau du jour » sur l'accueil, bannière « À la une ».
+- **Onglet Outils** : Focus et Panier, plus 6 DLC utilitaires à débloquer (Sources/Extras.swift) : Tâches, Hydratation (rappel 2 h), Habitudes (séries), Zen (respiration guidée), Bilan d'humeur (14 jours), Pauses santé (20-20-20, posture, étirements). Pack « Bureau Pro » = les 6 à prix réduit.
+- **6 nouveaux packs de skins** (18 skins) : Vacances, Gentleman, Cosy, Rockstar, Bonbon, Cyber.

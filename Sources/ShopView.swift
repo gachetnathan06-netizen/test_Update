@@ -5,6 +5,7 @@ import SwiftUI
 struct ShopView: View {
     @EnvironmentObject var app: AppState
     @Environment(\.presentationMode) private var presentation
+    var embedded = false
     @State private var tab = 0
     @State private var bumped: String? = nil
 
@@ -16,19 +17,26 @@ struct ShopView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     balance
                     giftCard
+                    featured
                     Picker("", selection: $tab) {
                         Text("Nourriture").tag(0)
                         Text("Packs").tag(1)
+                        Text("Outils").tag(2)
                     }
                     .pickerStyle(.segmented)
-                    if tab == 0 { foodGrid } else { packSections }
+                    if tab == 0 { foodGrid } else if tab == 1 { packSections } else { toolSection }
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 28)
             }
-            .background(Theme.ink.edgesIgnoringSafeArea(.all))
-            .navigationBarTitle("Boutique", displayMode: .inline)
-            .navigationBarItems(trailing: Button("Fermer") { presentation.wrappedValue.dismiss() })
+            .background(Theme.ink.ignoresSafeArea())
+            .navigationTitle("Boutique")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if !embedded { Button("Fermer") { presentation.wrappedValue.dismiss() } }
+                }
+            }
         }
         .foregroundColor(.white)
     }
@@ -56,7 +64,7 @@ struct ShopView: View {
             HStack(spacing: 12) {
                 Text("🎁").font(.system(size: 30))
                     .scaleEffect(bumped == "gift" ? 1.3 : 1)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.45))
+                    .animation(.spring(response: 0.3, dampingFraction: 0.45), value: bumped)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(ready ? "Cadeau du jour" : "Cadeau récupéré").font(Theme.rounded(16))
                     Text(ready ? "5 pièces et un repas surprise" : "Reviens demain pour le suivant")
@@ -77,13 +85,65 @@ struct ShopView: View {
         }
         .buttonStyle(PressStyle())
         .disabled(!ready)
-        .accessibility(label: Text(ready ? "Ouvrir le cadeau du jour" : "Cadeau du jour déjà récupéré"))
+        .accessibilityLabel(ready ? "Ouvrir le cadeau du jour" : "Cadeau du jour déjà récupéré")
+    }
+
+    // MARK: À la une
+
+    @ViewBuilder private var featured: some View {
+        if !app.ownsTool(Tools.bundleID) {
+            banner(title: "Bureau Pro", subtitle: "6 outils utiles : tâches, eau, habitudes, zen, bilan, pauses. −90 pièces.",
+                   icon: "briefcase.fill", c1: Color(hex: 0xFFB547), c2: Color(hex: 0xFF7A59), cta: "Voir les outils") { tab = 2 }
+        } else if let p = Catalog.packs.first(where: { $0.id != "bob" && !app.owns($0.id) && $0.season?.isActive() == true }) {
+            banner(title: "\(p.name), en saison", subtitle: p.blurb, icon: p.icon,
+                   c1: Color(hex: 0x7B5CFF), c2: Color(hex: 0xFF6AD5), cta: "Voir les packs") { tab = 1 }
+        }
+    }
+
+    private func banner(title: String, subtitle: String, icon: String, c1: Color, c2: Color, cta: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: icon).font(.system(size: 26, weight: .bold)).foregroundColor(.white)
+                    .frame(width: 54, height: 54)
+                    .background(Circle().fill(Color.white.opacity(0.22)))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("À LA UNE").font(Theme.rounded(10, .bold)).foregroundColor(.white.opacity(0.8))
+                    Text(title).font(Theme.rounded(19, .bold))
+                    Text(subtitle).font(Theme.rounded(12.5, .medium)).foregroundColor(.white.opacity(0.9))
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                    Text(cta + " →").font(Theme.rounded(13, .bold)).padding(.top, 2)
+                }
+                Spacer(minLength: 0)
+            }
+            .foregroundColor(.white)
+            .padding(16)
+            .background(RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(LinearGradient(colors: [c1, c2], startPoint: .topLeading, endPoint: .bottomTrailing)))
+            .shadow(color: c2.opacity(0.35), radius: 16, y: 8)
+        }
+        .buttonStyle(PressStyle())
+    }
+
+    // MARK: Outils (DLC utilitaires)
+
+    private var toolSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ToolCard(tool: Tools.bundle) { if app.buyTool(Tools.bundle) { bump(Tools.bundleID) } }
+            section("Outils à l'unité", count: Tools.singles.count) {
+                ForEach(Tools.singles) { t in
+                    ToolCard(tool: t) { if app.buyTool(t) { bump(t.id) } }
+                }
+            }
+        }
     }
 
     // MARK: Nourriture
 
     private var foodGrid: some View {
-        FlowGrid(columns: 2, spacing: 12, cells: Catalog.foods.map { AnyView(foodCard($0)) } + [AnyView(tipCard)])
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            ForEach(Catalog.foods) { f in foodCard(f) }
+            tipCard
+        }
     }
 
     private func foodCard(_ f: Food) -> some View {
@@ -96,7 +156,7 @@ struct ShopView: View {
                     Text(f.emoji)
                         .font(.system(size: 46))
                         .scaleEffect(bumped == f.id ? 1.28 : 1)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.45))
+                        .animation(.spring(response: 0.3, dampingFraction: 0.45), value: bumped)
                 }
                 .frame(height: 88)
                 .frame(maxWidth: .infinity)
@@ -119,7 +179,7 @@ struct ShopView: View {
                         .frame(maxWidth: .infinity, minHeight: 36)
                 }
                 .buttonStyle(PressStyle())
-                .accessibility(label: Text("Acheter 5 \(f.name) pour \(f.cost * 5) pièces"))
+                .accessibilityLabel("Acheter 5 \(f.name) pour \(f.cost * 5) pièces")
             }
         }
         .padding(12)
@@ -133,7 +193,7 @@ struct ShopView: View {
             .frame(minWidth: 24, minHeight: 24)
             .padding(.horizontal, 2)
             .background(Capsule().fill(n > 0 ? Theme.mint : Color.white.opacity(0.14)))
-            .accessibility(label: Text("En stock : \(n)"))
+            .accessibilityLabel("En stock : \(n)")
     }
 
     private func effect(_ symbol: String, _ v: Double, _ color: Color) -> some View {
@@ -244,7 +304,7 @@ struct ShopView: View {
         .padding(14)
         .glass(22)
         .scaleEffect(bumped == p.id ? 1.02 : 1)
-        .animation(.spring(response: 0.3, dampingFraction: 0.55))
+        .animation(.spring(response: 0.3, dampingFraction: 0.55), value: bumped)
     }
 
     private func tag(_ t: String, _ c: Color) -> some View {
@@ -276,7 +336,7 @@ struct ShopView: View {
                 .fill(ok ? Theme.amber : Color.white.opacity(0.08)))
         }
         .buttonStyle(PressStyle())
-        .accessibility(label: Text(ok ? "\(label), \(price) pièces" : "Il te manque \(price - app.s.coins) pièces"))
+        .accessibilityLabel(ok ? "\(label), \(price) pièces" : "Il te manque \(price - app.s.coins) pièces")
     }
 
     private func bump(_ id: String) {

@@ -2,7 +2,7 @@ name: CompagnonBOB
 options:
   bundleIdPrefix: com.death
   deploymentTarget:
-    iOS: "13.0"
+    iOS: "14.0"
   createIntermediateGroups: true
 settings:
   base:
@@ -20,7 +20,7 @@ targets:
       path: Sources/Info.plist
       properties:
         CFBundleDisplayName: BOB
-        UILaunchStoryboardName: LaunchScreen
+        UILaunchScreen: {}
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false

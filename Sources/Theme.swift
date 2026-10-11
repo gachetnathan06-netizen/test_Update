@@ -3,10 +3,11 @@ import UIKit
 
 extension Color {
     init(hex: UInt32, opacity: Double = 1) {
-        self.init(UIColor(red: CGFloat((hex >> 16) & 0xFF) / 255,
-                          green: CGFloat((hex >> 8) & 0xFF) / 255,
-                          blue: CGFloat(hex & 0xFF) / 255,
-                          alpha: CGFloat(opacity)))
+        self.init(.sRGB,
+                  red: Double((hex >> 16) & 0xFF) / 255,
+                  green: Double((hex >> 8) & 0xFF) / 255,
+                  blue: Double(hex & 0xFF) / 255,
+                  opacity: opacity)
     }
 }
 
@@ -20,7 +21,7 @@ struct RGB {
         b = Double(hex & 0xFF) / 255
     }
     init(r: Double, g: Double, b: Double) { self.r = r; self.g = g; self.b = b }
-    var color: Color { Color(UIColor(red: CGFloat(r), green: CGFloat(g), blue: CGFloat(b), alpha: 1)) }
+    var color: Color { Color(.sRGB, red: r, green: g, blue: b, opacity: 1) }
     static func mix(_ a: RGB, _ b: RGB, _ t: Double) -> RGB {
         let k = min(1, max(0, t))
         return RGB(r: a.r + (b.r - a.r) * k, g: a.g + (b.g - a.g) * k, b: a.b + (b.b - a.b) * k)
@@ -96,7 +97,7 @@ struct PressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.92 : 1)
-            .animation(.spring(response: 0.25, dampingFraction: 0.6))
+            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 

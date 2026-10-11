@@ -160,7 +160,7 @@ struct StageView: View {
             sim.onPat = { Haptics.impact(.soft, 0.6); app.patTick() }
             sim.onPoke = { Haptics.impact(.light); Sound.shared.poke(); app.poke() }
         }
-        .edgesIgnoringSafeArea(.all)
+        .ignoresSafeArea()
     }
 
     private func render(_ ctx: GraphicsContext, _ size: CGSize, _ date: Date) {

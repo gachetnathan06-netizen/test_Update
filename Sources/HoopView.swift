@@ -208,7 +208,7 @@ struct HoopView: View {
             .foregroundColor(.white)
             .allowsHitTesting(false)
         }
-        .edgesIgnoringSafeArea(.all)
+        .ignoresSafeArea()
         .onAppear {
             sim.onScore = { streak, clean in
                 app.s.baskets += 1

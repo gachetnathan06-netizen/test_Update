@@ -4,10 +4,7 @@ struct MoreView: View {
     @EnvironmentObject var app: AppState
     @State private var bedside = false
     @State private var confirmReset = false
-    private var fps: Int {
-        get { let v = UserDefaults.standard.integer(forKey: "fps"); return v == 0 ? 60 : v }
-        nonmutating set { UserDefaults.standard.set(newValue, forKey: "fps"); app.objectWillChange.send() }
-    }
+    @AppStorage("fps") private var fps = 60
 
     var body: some View {
         NavigationStack {
@@ -17,7 +14,7 @@ struct MoreView: View {
                         BobThumb(skin: app.skin, head: app.head, eyes: app.eyes, ears: app.ears, neck: app.neck, animated: true, size: 84)
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Niveau \(app.level)").font(Theme.rounded(22, .bold))
-                            BarProgress(value: app.levelProgress)
+                            ProgressView(value: app.levelProgress).progressViewStyle(LinearProgressViewStyle(tint: Theme.amber))
                             Text("\(app.s.xp % AppState.pointsPerLevel)/\(AppState.pointsPerLevel) · encore \(app.pointsToNext) action(s) pour le niveau \(app.level + 1)")
                                 .font(Theme.rounded(12.5, .medium)).foregroundColor(.white.opacity(0.85))
                             Text("1 action = 1 point (nourrir, câlin, jouer, focus, panier). 10 points = 1 niveau.")
@@ -90,14 +87,14 @@ struct MoreView: View {
                             Image(systemName: "speaker.wave.3.fill").foregroundColor(.white.opacity(0.6))
                         }
                     }
-                    Toggle("Garder l'écran allumé", isOn: Binding(get: { app.s.settings.keepAwake }, set: { app.s.settings.keepAwake = $0; app.applyKeepAwake() }))
+                    Toggle("Garder l'écran allumé", isOn: Binding(get: { app.s.settings.keepAwake }, set: { app.s.settings.keepAwake = $0; app.applyKeepAwake() })).toggleStyle(SwitchToggleStyle(tint: Theme.amber))
                     Toggle("Notifier quand BOB a faim", isOn: Binding(get: { app.s.settings.notifHunger }, set: { v in
                         app.s.settings.notifHunger = v
                         if v { Notifier.shared.request() }
-                    }))
+                    })).toggleStyle(SwitchToggleStyle(tint: Theme.amber))
                     VStack(alignment: .leading, spacing: 8) {
                         Label("Fluidité : \(fps) images/s", systemImage: "bolt.fill")
-                        Picker("", selection: Binding(get: { fps }, set: { fps = $0 })) {
+                        Picker("", selection: $fps) {
                             Text("30").tag(30)
                             Text("60").tag(60)
                             Text("120").tag(120)
@@ -119,14 +116,14 @@ struct MoreView: View {
                     Button { confirmReset = true } label: { Label("Réinitialiser BOB", systemImage: "arrow.counterclockwise") }
                 }
             }
-            .background(Theme.ink.edgesIgnoringSafeArea(.all))
-            .navigationBarTitle("Plus")
+            .background(Theme.ink.ignoresSafeArea())
+            .navigationTitle("Plus")
             .accentColor(Theme.amber)
             .actionSheet(isPresented: $confirmReset) {
                 ActionSheet(title: Text("Tout remettre à zéro ?"),
                             buttons: [.destructive(Text("Réinitialiser")) { app.resetAll() }, .cancel(Text("Annuler"))])
             }
-            .sheet(isPresented: $bedside) { BedsideView() }
+            .fullScreenCover(isPresented: $bedside) { BedsideView() }
         }
         .foregroundColor(.white)
     }
@@ -140,7 +137,7 @@ struct MoreView: View {
     }
 
     private func toggle(_ t: String, _ kp: WritableKeyPath<Settings, Bool>) -> some View {
-        Toggle(t, isOn: Binding(get: { app.s.settings[keyPath: kp] }, set: { app.s.settings[keyPath: kp] = $0 }))
+        Toggle(t, isOn: Binding(get: { app.s.settings[keyPath: kp] }, set: { app.s.settings[keyPath: kp] = $0 })).toggleStyle(SwitchToggleStyle(tint: Theme.amber))
     }
 }
 
@@ -152,7 +149,7 @@ struct BedsideView: View {
 
     var body: some View {
         ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
+            Color.black.ignoresSafeArea()
             VStack(spacing: 26) {
                 TimelineView(.periodic(from: Date(), by: 1)) { tl in
                     Text(tl.date.timeStr)
@@ -176,6 +173,6 @@ struct BedsideView: View {
         }
         .onDisappear { app.applyKeepAwake() }
         .statusBarHidden(true)
-        .environment(\.colorScheme, .dark)
+        .preferredColorScheme(.dark)
     }
 }

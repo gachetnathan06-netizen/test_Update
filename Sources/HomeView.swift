@@ -54,7 +54,7 @@ struct MeterBar: View {
             }
             .frame(width: 64, height: 5)
         }
-        .animation(.easeOut(duration: 0.4))
+        .animation(.easeOut(duration: 0.4), value: value)
     }
 }
 
@@ -97,7 +97,6 @@ struct HomeView: View {
     @EnvironmentObject var app: AppState
     @State private var showFood = false
     @State private var showShop = false
-    @State private var showMoods = false
     @State private var shareImage: UIImage?
     @State private var showShare = false
 
@@ -105,10 +104,11 @@ struct HomeView: View {
         ZStack {
             StageView()
             LinearGradient(colors: [.black.opacity(0.35), .clear], startPoint: .top, endPoint: .init(x: 0.5, y: 0.22))
-                .edgesIgnoringSafeArea(.all).allowsHitTesting(false)
+                .ignoresSafeArea().allowsHitTesting(false)
 
             VStack(spacing: 0) {
                 topBar
+                if app.giftReady { giftChip.padding(.top, 8).transition(.scale.combined(with: .opacity)) }
                 Spacer()
             }
 
@@ -128,7 +128,7 @@ struct HomeView: View {
                 }
             }
             .allowsHitTesting(false)
-            .animation(.spring(response: 0.35, dampingFraction: 0.75))
+            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: app.bubble.isEmpty)
 
             VStack(spacing: 10) {
                 Spacer()
@@ -159,11 +159,14 @@ struct HomeView: View {
             VStack(alignment: .trailing, spacing: 8) {
                 HStack(spacing: 10) {
                     Button { showShop = true } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "circle.fill").foregroundColor(Theme.amber)
+                        HStack(spacing: 5) {
+                            Image(systemName: "circle.fill").font(.system(size: 10))
                             Text("\(app.s.coins)")
-                            Image(systemName: "plus.circle.fill").foregroundColor(Theme.amber.opacity(0.8))
+                            Image(systemName: "cart.fill").font(.system(size: 11))
                         }
+                        .foregroundColor(Color(hex: 0x1B1530))
+                        .padding(.horizontal, 10).frame(minHeight: 30)
+                        .background(Capsule().fill(Theme.amber))
                     }
                     .buttonStyle(PressStyle())
                     Text("Niv. \(app.level) · \(app.s.xp % AppState.pointsPerLevel)/\(AppState.pointsPerLevel)").foregroundColor(.white.opacity(0.75))
@@ -179,9 +182,29 @@ struct HomeView: View {
         .padding(.top, 6)
     }
 
+    private var giftChip: some View {
+        Button { showShop = true } label: {
+            HStack(spacing: 8) {
+                Text("🎁")
+                Text("Cadeau du jour à ouvrir").font(Theme.rounded(13, .bold))
+                Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold))
+            }
+            .foregroundColor(Color(hex: 0x1B1530))
+            .padding(.horizontal, 14).frame(minHeight: 38)
+            .background(Capsule().fill(Theme.amber))
+            .shadow(color: Theme.amber.opacity(0.45), radius: 12, y: 4)
+        }
+        .buttonStyle(PressStyle())
+    }
+
     private var moodMenu: some View {
         let m = app.mood(temp: nil)
-        return Button { showMoods = true } label: {
+        return Menu {
+            Button { app.s.forced = nil } label: { Label("Automatique", systemImage: "wand.and.stars") }
+            ForEach(Mood.allCases) { mo in
+                Button { app.s.forced = mo.rawValue } label: { Label(mo.label, systemImage: mo.symbol) }
+            }
+        } label: {
             HStack(spacing: 6) {
                 Image(systemName: m.symbol)
                 Text(app.s.forced == nil ? m.label : "\(m.label) · fixé")
@@ -190,12 +213,6 @@ struct HomeView: View {
             .foregroundColor(app.s.forced == nil ? .white : Theme.amber)
             .padding(.horizontal, 12).padding(.vertical, 8)
             .glass(14)
-        }
-        .actionSheet(isPresented: $showMoods) {
-            var b: [ActionSheet.Button] = [.default(Text("Automatique")) { app.s.forced = nil }]
-            for mo in Mood.allCases { b.append(.default(Text(mo.label)) { app.s.forced = mo.rawValue }) }
-            b.append(.cancel(Text("Annuler")))
-            return ActionSheet(title: Text("Humeur de BOB"), buttons: b)
         }
     }
 
@@ -219,7 +236,7 @@ struct HomeView: View {
                     }
                 }
                 .buttonStyle(PressStyle())
-                .accessibility(label: Text("\(f.name), \(n) en stock"))
+                .accessibilityLabel("\(f.name), \(n) en stock")
             }
             Button { showShop = true } label: {
                 ZStack(alignment: .topTrailing) {
@@ -231,7 +248,7 @@ struct HomeView: View {
                 }
             }
             .buttonStyle(PressStyle())
-            .accessibility(label: Text("Boutique"))
+            .accessibilityLabel("Boutique")
         }
         .padding(.horizontal, 6)
         .glass(22)
@@ -245,6 +262,7 @@ struct HomeView: View {
             DockButton(symbol: "heart.fill", label: "Câlin") { app.hug() }
             DockButton(symbol: "sparkles", label: "Jouer") { app.play() }
             DockButton(symbol: app.s.sleeping ? "sun.max.fill" : "moon.zzz.fill", label: app.s.sleeping ? "Réveil" : "Dormir", active: app.s.sleeping) { app.toggleSleep() }
+            DockButton(symbol: "cart.fill", label: "Boutique", active: true) { showShop = true }
             DockButton(symbol: "camera.fill", label: "Photo") { snapshot() }
         }
         .foregroundColor(.white)

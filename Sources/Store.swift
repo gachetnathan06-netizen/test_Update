@@ -107,7 +107,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.alert, .sound])
+        completionHandler([.banner, .sound])
     }
     func schedule(_ r: Reminder) {
         let center = UNUserNotificationCenter.current()

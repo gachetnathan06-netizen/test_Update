@@ -8,7 +8,7 @@ struct FocusView: View {
 
     private var remindersHeader: some View {
         HStack {
-            Text("Rappels").font(Theme.rounded(17)).foregroundColor(.white)
+            Text("Rappels").font(Theme.rounded(17)).foregroundColor(.white).textCase(nil)
             Spacer()
             Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").font(.system(size: 22)).foregroundColor(Theme.amber) }
         }
@@ -33,7 +33,7 @@ struct FocusView: View {
                             }
                             Spacer()
                             Toggle("", isOn: Binding(get: { r.enabled }, set: { v in var n = r; n.enabled = v; app.updateReminder(n) }))
-                                .labelsHidden()
+                                .labelsHidden().toggleStyle(SwitchToggleStyle(tint: Theme.amber))
                         }
                         .listRowBackground(Color.white.opacity(0.05))
                     }
@@ -45,9 +45,9 @@ struct FocusView: View {
                     }
                 }
             }
-            .listStyle(GroupedListStyle())
-            .background(Theme.ink.edgesIgnoringSafeArea(.all))
-            .navigationBarTitle("Focus")
+            .listStyle(.insetGrouped)
+            .background(Theme.ink.ignoresSafeArea())
+            .navigationTitle("Focus")
             .sheet(isPresented: $showAdd) { AddReminderSheet() }
         }
         .foregroundColor(.white)
@@ -68,7 +68,7 @@ struct FocusView: View {
                     .trim(from: 0, to: max(0.001, app.pomoProgress))
                     .stroke(Theme.amber, style: StrokeStyle(lineWidth: 12, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1))
+                    .animation(.linear(duration: 1), value: app.pomoProgress)
                 VStack(spacing: 2) {
                     BobThumb(skin: app.skin, mood: app.pomoPhase == .focus ? .concentre : .heureux,
                              head: app.head, eyes: app.eyes, ears: app.ears, neck: app.neck,
@@ -123,21 +123,24 @@ struct AddReminderSheet: View {
             Form {
                 Section(header: Text("Rappel")) {
                     TextField("Ex : boire de l'eau", text: $title)
-                    Toggle("Tous les jours", isOn: $daily)
+                    Toggle("Tous les jours", isOn: $daily).toggleStyle(SwitchToggleStyle(tint: Theme.amber))
                     DatePicker("Quand", selection: $time, displayedComponents: daily ? [.hourAndMinute] : [.date, .hourAndMinute])
                 }
             }
-            .background(Theme.ink.edgesIgnoringSafeArea(.all))
-            .navigationBarTitle("Nouveau rappel", displayMode: .inline)
-            .navigationBarItems(
-                leading: Button("Annuler") { dismiss() },
-                trailing: Button("Ajouter") {
-                    let t = title.trimmingCharacters(in: .whitespaces)
-                    app.addReminder(Reminder(title: t.isEmpty ? "Coucou de BOB" : t, time: time, daily: daily))
-                    dismiss()
+            .background(Theme.ink.ignoresSafeArea())
+            .navigationTitle("Nouveau rappel")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Ajouter") {
+                        let t = title.trimmingCharacters(in: .whitespaces)
+                        app.addReminder(Reminder(title: t.isEmpty ? "Coucou de BOB" : t, time: time, daily: daily))
+                        dismiss()
+                    }
                 }
-            )
+            }
         }
-        .environment(\.colorScheme, .dark)
+        .preferredColorScheme(.dark)
     }
 }

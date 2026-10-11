@@ -20,8 +20,9 @@ struct WardrobeView: View {
                 }
                 .padding(16)
             }
-            .background(Theme.ink.edgesIgnoringSafeArea(.all))
-            .navigationBarTitle("Garde-robe", displayMode: .large)
+            .background(Theme.ink.ignoresSafeArea())
+            .navigationTitle("Garde-robe")
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 
@@ -51,13 +52,15 @@ struct WardrobeView: View {
                         Text(p.name).font(Theme.rounded(17))
                         Text(p.blurb).font(Theme.rounded(13, .medium)).foregroundColor(.white.opacity(0.5))
                     }
-                    FlowGrid(spacing: 10, cells: p.skins.map { sk in
-                        AnyView(tile(selected: app.s.skinID == sk.id, name: sk.name) {
-                            app.chooseSkin(sk)
-                        } thumb: {
-                            BobThumb(skin: sk, head: app.head, eyes: app.eyes, ears: app.ears, neck: app.neck, size: 78)
-                        })
-                    })
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 98), spacing: 10)], spacing: 10) {
+                        ForEach(p.skins) { sk in
+                            tile(selected: app.s.skinID == sk.id, name: sk.name) {
+                                app.chooseSkin(sk)
+                            } thumb: {
+                                BobThumb(skin: sk, head: app.head, eyes: app.eyes, ears: app.ears, neck: app.neck, size: 78)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -70,30 +73,25 @@ struct WardrobeView: View {
             ForEach(PropCategory.allCases) { cat in
                 VStack(alignment: .leading, spacing: 10) {
                     Text(cat.title).font(Theme.rounded(17))
-                    FlowGrid(spacing: 10, cells: accessoryCells(cat))
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 98), spacing: 10)], spacing: 10) {
+                        tile(selected: app.prop(for: cat) == nil, name: "Aucun") {
+                            app.equip(cat, nil)
+                        } thumb: {
+                            BobThumb(skin: app.skin, size: 78)
+                        }
+                        ForEach(Prop.wearables.filter { $0.category == cat }) { p in
+                            tile(selected: app.prop(for: cat) == p, name: p.name) {
+                                app.equip(cat, p)
+                            } thumb: {
+                                BobThumb(skin: app.skin, head: cat == .tete ? p : nil, eyes: cat == .yeux ? p : nil,
+                                         ears: cat == .oreilles ? p : nil, neck: cat == .cou ? p : nil, size: 78)
+                            }
+                        }
+                    }
                 }
             }
         }
         .foregroundColor(.white)
-    }
-
-    private func accessoryCells(_ cat: PropCategory) -> [AnyView] {
-        var cells: [AnyView] = [
-            AnyView(tile(selected: app.prop(for: cat) == nil, name: "Aucun") {
-                app.equip(cat, nil)
-            } thumb: {
-                BobThumb(skin: app.skin, size: 78)
-            })
-        ]
-        for p in Prop.wearables.filter({ $0.category == cat }) {
-            cells.append(AnyView(tile(selected: app.prop(for: cat) == p, name: p.name) {
-                app.equip(cat, p)
-            } thumb: {
-                BobThumb(skin: app.skin, head: cat == .tete ? p : nil, eyes: cat == .yeux ? p : nil,
-                         ears: cat == .oreilles ? p : nil, neck: cat == .cou ? p : nil, size: 78)
-            }))
-        }
-        return cells
     }
 
     // MARK: Packs
@@ -123,7 +121,7 @@ struct WardrobeView: View {
                     Spacer()
                     if owned {
                         Toggle("", isOn: Binding(get: { on }, set: { app.setPack(p.id, enabled: $0) }))
-                            .labelsHidden().disabled(p.id == "bob")
+                            .labelsHidden().toggleStyle(SwitchToggleStyle(tint: Theme.amber)).disabled(p.id == "bob")
                     } else {
                         Button { app.buyPack(p) } label: {
                             HStack(spacing: 4) {

@@ -288,7 +288,25 @@ enum Catalog {
                 quips: ["Es-tu diverti ?"]),
         premium("licorne", "Licorne", "wand.and.stars", "Magique.", sig: [.corneLicorne],
                 pal: [("Pastel", 0xFFD1F0, 0xC9B6FF), ("Arc-en-ciel", 0xFFB3E6, 0x8FD3FF), ("Minuit", 0xA9A0FF, 0x4B3F9E)],
-                decor: .stars, quips: ["Tout est brillant."])
+                decor: .stars, quips: ["Tout est brillant."]),
+        premium("vacances", "Vacances", "sun.max.fill", "Cocktail et transat.", sig: [.chapeauPaille, .lunettesSoleil],
+                pal: [("Tropical", 0xFFD36B, 0xFF8F3F), ("Lagon", 0x7FE8D8, 0x2AA89A), ("Coucher", 0xFF9BB0, 0xE0507A)],
+                quips: ["Out of office. Pour de vrai."]),
+        premium("gentleman", "Gentleman", "eyeglasses", "Distingué, jusqu'au blop.", sig: [.hautDeForme, .monocle, .noeudPapillon],
+                pal: [("Smoking", 0x6B6F85, 0x24263A), ("Bordeaux", 0xB5546B, 0x5A1830), ("Ivoire", 0xF3E8D2, 0xC9B48A)],
+                quips: ["Très chic, n'est-ce pas ?"]),
+        premium("cosy", "Cosy", "cup.and.saucer.fill", "Plaid, thé et tricot.", sig: [.cacheOreilles, .echarpe],
+                pal: [("Cacao", 0xD9B38C, 0x8A5A3A), ("Chantilly", 0xFFF3E6, 0xE3C9A8), ("Myrtille", 0x9AA6E8, 0x4A569E)],
+                tex: .knit, texColor: 0xFFFFFF, quips: ["On reste sous le plaid ?"]),
+        premium("rock", "Rockstar", "music.note", "Sold out ce soir.", sig: [.bandana, .lunettesSoleil],
+                pal: [("Noir", 0x5A5E70, 0x1B1C26), ("Électrique", 0x6FE0FF, 0x2A55E0), ("Magenta", 0xFF6AC0, 0x8A1F6E)],
+                decor: .stars, quips: ["Un, deux, trois, quatre !"]),
+        premium("bonbon", "Bonbon", "gift.fill", "Sucré à en fondre.", sig: [],
+                pal: [("Fraise", 0xFF9FB8, 0xE8507A), ("Menthe choc", 0x9CF0D0, 0x4A8A74), ("Barbe à papa", 0xD6B8FF, 0x8FD0FF)],
+                tex: .polka, texColor: 0xFFFFFF, decor: .sprinkles, quips: ["J'ai pris un sucre de plus."]),
+        premium("cyber", "Cyber", "cpu", "Connecté. Trop, peut-être.", sig: [.lunettesCarrees, .ecouteurs],
+                pal: [("Néon", 0xFF5CE1, 0x5A2BFF), ("Matrix", 0x7CFF9C, 0x0F6B3A), ("Chrome", 0xCFD8E6, 0x6F7C8C)],
+                tex: .stripes, texColor: 0xFFFFFF, quips: ["Chargement… blop."])
     ]
 
     static let allSkins: [Skin] = packs.flatMap { $0.skins }
@@ -300,7 +318,7 @@ enum Catalog {
         switch p.id {
         case "bob": return 0
         case "dore": return 60
-        case "dragon", "sirene", "heros", "samourai", "dj", "alien", "detective", "clown", "boxeur", "cupidon", "gladiateur", "licorne": return 120
+        case "dragon", "sirene", "heros", "samourai", "dj", "alien", "detective", "clown", "boxeur", "cupidon", "gladiateur", "licorne", "vacances", "gentleman", "cosy", "rock", "bonbon", "cyber": return 120
         default: return p.season != nil ? 60 : 80
         }
     }
