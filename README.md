@@ -1,4 +1,4 @@
-# BOB 2.0 : version iPhone (SwiftUI), compatible iOS 14+
+# BOB 2.0 : version iPhone (SwiftUI), compatible iOS 13+
 
 Tout le Compagnon de bureau, sans l'errance sur les autres apps (BOB vit uniquement dans l'appli).
 

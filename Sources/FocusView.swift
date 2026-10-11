@@ -45,7 +45,7 @@ struct FocusView: View {
                     }
                 }
             }
-            .listStyle(.insetGrouped)
+            .listStyle(GroupedListStyle())
             .background(Theme.ink.edgesIgnoringSafeArea(.all))
             .navigationBarTitle("Focus")
             .sheet(isPresented: $showAdd) { AddReminderSheet() }
