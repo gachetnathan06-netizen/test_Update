@@ -8,19 +8,31 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+
       - name: Generate project
         run: |
           brew install xcodegen
           xcodegen generate
+          ls -la
+
       - name: Build
         run: |
-          xcodebuild -project Compagnon.xcodeproj -scheme Compagnon -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+          PROJECT=$(find . -maxdepth 1 -name "*.xcodeproj" | head -n 1)
+          SCHEME=$(basename "$PROJECT" .xcodeproj)
+          echo "Projet: $PROJECT / Scheme: $SCHEME"
+          xcodebuild -project "$PROJECT" -scheme "$SCHEME" \
+            -configuration Release -sdk iphoneos -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+
       - name: Package
         run: |
+          APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -n 1)
+          echo "App: $APP"
           mkdir Payload
-          cp -R build/Build/Products/Release-iphoneos/Compagnon.app Payload/
-          zip -r Compagnon.ipa Payload
+          cp -R "$APP" Payload/
+          zip -r Bob.ipa Payload
+
       - uses: actions/upload-artifact@v4
         with:
-          name: Compagnon-IPA
-          path: Compagnon.ipa
+          name: Bob-IPA
+          path: Bob.ipa
