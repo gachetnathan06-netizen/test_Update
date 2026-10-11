@@ -3,6 +3,11 @@ on:
   push:
     branches: [main, master]
   workflow_dispatch:
+
+env:
+  # Laissez vide pour utiliser la valeur de project.yml. Mettez "13.0" pour forcer iOS 13.
+  DEPLOY_TARGET: ""
+
 jobs:
   build:
     runs-on: macos-15
@@ -13,21 +18,34 @@ jobs:
         run: |
           brew install xcodegen
           xcodegen generate
-          ls -la
 
       - name: Build
         run: |
+          set -o pipefail
           PROJECT=$(find . -maxdepth 1 -name "*.xcodeproj" | head -n 1)
           SCHEME=$(basename "$PROJECT" .xcodeproj)
-          echo "Projet: $PROJECT / Scheme: $SCHEME"
+          EXTRA=""
+          if [ -n "$DEPLOY_TARGET" ]; then EXTRA="IPHONEOS_DEPLOYMENT_TARGET=$DEPLOY_TARGET"; fi
           xcodebuild -project "$PROJECT" -scheme "$SCHEME" \
             -configuration Release -sdk iphoneos -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+            $EXTRA \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build.log
+
+      - name: Résumé des erreurs
+        if: failure()
+        run: grep -E "error:" build.log | sort -u || true
+
+      - name: Sauvegarder le log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
 
       - name: Package
         run: |
           APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -n 1)
-          echo "App: $APP"
           mkdir Payload
           cp -R "$APP" Payload/
           zip -r Bob.ipa Payload
